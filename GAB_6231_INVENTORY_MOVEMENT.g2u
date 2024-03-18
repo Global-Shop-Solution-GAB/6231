@@ -1,0 +1,742 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.F_StockSummary..Create
+Gui.F_StockSummary..Caption("Inventory Stock Balance and History")
+Gui.F_StockSummary..Size(15885,10755)
+Gui.F_StockSummary..MinX(0)
+Gui.F_StockSummary..MinY(0)
+Gui.F_StockSummary..Position(0,0)
+Gui.F_StockSummary..BackColor(-2147483633)
+Gui.F_StockSummary..MousePointer(0)
+Gui.F_StockSummary..Event(UnLoad,Unload)
+'Gui.F_StockSummary..Event(Resize,ResizeScreen)
+Gui.F_StockSummary.lbl1.Create(Label,"Product Line",True,1170,255,0,60,135,True,0,"Arial",9,-2147483633,0)
+Gui.F_StockSummary.ddlPL.Create(DropDownList)
+Gui.F_StockSummary.ddlPL.Size(1095,345)
+Gui.F_StockSummary.ddlPL.Position(60,345)
+Gui.F_StockSummary.ddlPL.FontSize(9)
+Gui.F_StockSummary.lbl2.Create(Label,"Beginning Date",True,1515,255,0,1590,135,True,0,"Arial",9,-2147483633,0)
+Gui.F_StockSummary.dtpBeg.Create(DatePicker)
+Gui.F_StockSummary.dtpBeg.Size(1485,285)
+Gui.F_StockSummary.dtpBeg.Position(1590,345)
+Gui.F_StockSummary.lbl3.Create(Label,"End Date",True,1530,255,0,3360,135,True,0,"Arial",9,-2147483633,0)
+Gui.F_StockSummary.dtpEnd.Create(DatePicker)
+Gui.F_StockSummary.dtpEnd.Size(1485,285)
+Gui.F_StockSummary.dtpEnd.Position(3360,345)
+Gui.F_StockSummary.lblLoc.Create(Label,"Location",True,990,255,0,10005,135,True,0,"Arial",9,-2147483633,0)
+Gui.F_StockSummary.ddlLoc.Create(DropDownList)
+Gui.F_StockSummary.ddlLoc.Size(900,345)
+Gui.F_StockSummary.ddlLoc.Position(10005,345)
+Gui.F_StockSummary.ddlLoc.FontSize(9)
+Gui.F_StockSummary.cmdRefresh.Create(Button)
+Gui.F_StockSummary.cmdRefresh.Size(1380,465)
+Gui.F_StockSummary.cmdRefresh.Position(13665,120)
+Gui.F_StockSummary.cmdRefresh.Caption("REFRESH")
+Gui.F_StockSummary.cmdRefresh.Event(Click,CheckingParameters)
+Gui.F_StockSummary.picGSSLogo.Create(PictureBox)
+Gui.F_StockSummary.picGSSLogo.Size(4125,960)
+Gui.F_StockSummary.picGSSLogo.Position(5445,60)
+Gui.F_StockSummary.cmdExport.Create(Button)
+Gui.F_StockSummary.cmdExport.Size(1380,465)
+Gui.F_StockSummary.cmdExport.Position(12090,120)
+Gui.F_StockSummary.cmdExport.Caption("Export")
+Gui.F_StockSummary.cmdExport.FontSize(9)
+Gui.F_StockSummary.cmdExport.Event(Click,Export)
+Gui.F_StockSummary.chkHide.Create(CheckBox)
+Gui.F_StockSummary.chkHide.Size(4860,360)
+Gui.F_StockSummary.chkHide.Position(60,750)
+Gui.F_StockSummary.chkHide.Caption("Hide part number with no transaction history")
+Gui.F_StockSummary.chkHide.FontSize(9)
+Gui.F_StockSummary.chkHide.Event(Click,HidePart)
+Gui.F_StockSummary.tab1.Create(Tab)
+Gui.F_StockSummary.tab1.Size(15495,8940)
+Gui.F_StockSummary.tab1.Position(60,1170)
+Gui.F_StockSummary.tab1.Tabs(2)
+Gui.F_StockSummary.tab1.SetTab(0)
+Gui.F_StockSummary.tab1.Caption("Summary")
+Gui.F_StockSummary.tab1.SetTab(1)
+Gui.F_StockSummary.tab1.Caption("Detail")
+Gui.F_StockSummary.GsGridControl1.Create(GsGridControl)
+Gui.F_StockSummary.GsGridControl1.Size(15315,8340)
+Gui.F_StockSummary.GsGridControl1.Position(30,90)
+Gui.F_StockSummary.GsGridControl1.Parent("tab1",0)
+Gui.F_StockSummary.GsGridControlRawHist.Create(GsGridControl)
+Gui.F_StockSummary.GsGridControlRawHist.Size(15150,8235)
+Gui.F_StockSummary.GsGridControlRawHist.Position(30,45)
+Gui.F_StockSummary.GsGridControlRawHist.Parent("tab1",1)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+V.Global.bLoc.Declare
+V.Global.dBegDate.Declare(Date)
+V.Global.dEndDate.Declare(Date)
+V.Global.fMinHeight.Declare(Float,10755)
+V.Global.fMinWidth.Declare(Float,15405)
+V.Global.fRefHeight.Declare
+V.Global.fRefWidth.Declare
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+V.Local.sGSSLogo.Declare
+V.Local.sIcon.Declare
+V.Local.sSQL.Declare
+V.Local.i1.Declare
+
+V.Global.fRefHeight.Set(V.Global.fMinHeight)
+V.Global.fRefWidth.Set(V.Global.fMinWidth)
+
+F.Intrinsic.Date.DateAdd("M",-1,V.Ambient.Date,V.Global.dEndDate)
+F.Intrinsic.Date.BeginningOfMonth(V.Global.dEndDate,V.Global.dBegDate)
+F.Intrinsic.Date.EndOfMonth(V.Global.dEndDate,V.Global.dEndDate)
+
+F.Intrinsic.String.Build("{0}\ART\gss2.ico",V.Caller.GlobalDir,v.Local.sIcon)
+F.Intrinsic.String.Build("{0}\ART\GAB_GSS_Logo_Green_Dash.png",V.Caller.GlobalDir,V.Local.sGssLogo)
+Gui.F_StockSummary.picGSSLogo.Picture(V.Local.sGSSLogo)
+Gui.F_StockSummary..Icon(V.Local.sIcon)
+
+F.ODBC.Connection!Conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass,180)
+'Fill up PL dropdownlist
+F.Data.DataTable.CreateFromSQL("dtPL","Conx","select distinct(product_line) as PL, product_line from inventory_mstr order by product_line Desc",True)
+F.Data.DataTable.AddRow("dtPL","PL","ALL","Product_Line","ALL")
+F.Intrinsic.Control.For(V.Local.i1,V.DataTable.dtPL.RowCount--,0,-1)
+	Gui.F_StockSummary.ddlPL.AddItem(V.DataTable.dtPL(V.Local.i1).PL!FieldValTrim)
+F.Intrinsic.Control.Next(V.Local.i1)
+
+F.Data.DataTable.Close("dtPL")
+'V.Local.sSQL.Set("select top 1 product_line as PL from v_product_line order by product_line")
+V.Local.sSQL.Set("select top 1 prod_line as PL from v_PL_Master order by prod_line")
+F.ODBC.Connection!Conx.OpenLocalRecordsetRO("rst",V.Local.sSQL)
+Gui.F_StockSummary.ddlPL.Text(V.ODBC.Conx!rst.FieldValTrim!PL)
+F.ODBC.Conx!rst.Close
+
+Gui.F_StockSummary.tab1.SetTab(0)
+
+F.Data.DataTable.CreateFromSQL("dtLoc","Conx","select distinct(location) as loc, location from inventory_mstr",True)
+F.Intrinsic.Control.If(V.DataTable.dtLoc.RowCount,>,1)
+	V.Global.bLoc.Set(True)
+	F.Data.Dictionary.CreateFromDataTable("Loc","dtLoc","loc","location",2)
+'	F.Data.Dictionary.CreateFromSQL("Loc","Conx","select location as PL, location from v_locations order by location",2)
+	Gui.F_StockSummary.ddlLoc.AddItems("Dictionary","Loc")
+	F.Data.Dictionary.Close("Loc")
+	Gui.F_StockSummary.ddlLoc.Text(V.DataTable.dtLoc(0).loc!FieldValTrim)
+F.Intrinsic.Control.Else
+	V.Global.bLoc.Set(False)
+	Gui.F_StockSummary.ddlLoc.Visible(False)
+	Gui.F_StockSummary.lblLoc.Visible(False)
+F.Intrinsic.Control.EndIf
+F.Data.DataTable.Close("dtLoc")
+
+Gui.F_StockSummary.dtpBeg.Value(V.Global.dBegDate)
+Gui.F_StockSummary.dtpEnd.Value(V.Global.dEndDate)
+
+Gui.F_StockSummary.tab1.Anchor(15)
+Gui.F_StockSummary.GsGridControl1.Anchor(15)
+Gui.F_StockSummary.GsGridControlRawHist.Anchor(15)
+
+F.Intrinsic.Control.CallSub(checkingparameters)
+
+Gui.F_StockSummary..Show
+Program.Sub.Main.End
+
+Program.Sub.CheckingParameters.Start
+V.Local.iDiff.Declare
+V.Local.sLoc.Declare
+V.Local.sPL.Declare
+
+'Ensure that PL is selected
+'V.Local.sPL.Set(V.Screen.F_StockSummary!ddlPL.Text)
+'F.Intrinsic.Control.If(V.Local.sPL.Trim,=,"")
+'	F.Intrinsic.UI.Msgbox("Please select a product line to proceed","Inventory Movement [APAC]")
+'	Gui.F_StockSummary.ddlPL.SetFocus
+'	F.Intrinsic.Control.ExitSub
+'F.Intrinsic.Control.EndIf
+
+'Ensure that the date range is valid
+V.Global.dBegDate.Set(V.Screen.F_StockSummary!dtpBeg.Value)
+V.Global.dEndDate.Set(V.Screen.F_StockSummary!dtpEnd.Value)
+F.Intrinsic.Date.DateDiff("d",V.Global.dBegDate,V.Global.dEndDate,V.Local.iDiff)
+F.Intrinsic.Control.If(V.Local.iDiff,<,0)
+	F.Intrinsic.UI.Msgbox("Beginning date cannot be later than End date","Inventory Movement [APAC]")
+	Gui.F_StockSummary.dtpBeg.Value(V.Global.dEndDate)
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(loadstockdata)
+F.Intrinsic.Control.CallSub(LoadRawHist)
+
+Gui.F_StockSummary.chkHide.Value(0)
+'F.Intrinsic.Control.If(V.Global.bLoc,=,True)
+'	V.Local.sLoc.Set(V.Screen.F_StockSummary!ddlLoc.Text)
+'	F.Intrinsic.Control.If(V.Local.sLoc.Trim,=,"")
+'		F.Intrinsic.UI.Msgbox("Please select a location to proceed","Inventory Movement [APAC]")
+'		Gui.F_StockSummary.ddlLoc.SetFocus
+'		F.Intrinsic.Control.ExitSub
+'	F.Intrinsic.Control.Else
+'		F.Intrinsic.Control.CallSub(loadstockdata)
+'	F.Intrinsic.Control.EndIf
+'F.Intrinsic.Control.Else
+'	
+'F.Intrinsic.Control.EndIf
+Program.Sub.CheckingParameters.End
+
+Program.Sub.LoadStockData.Start
+V.Local.fBegBal.Declare
+V.Local.fEndBal.Declare
+V.Local.fIn.Declare
+V.Local.fOut.Declare
+V.Local.fTIn.Declare
+V.Local.fTOut.Declare
+V.Local.fOnHand.Declare
+V.Local.i1.Declare
+V.Local.i2.Declare
+V.Local.iRow.Declare
+V.Local.sDesc.Declare
+V.Local.sFilter.Declare
+V.Local.sLoc.Declare
+V.Local.sMsg.Declare
+V.Local.sPart.Declare
+V.Local.sPL.Declare
+V.Local.sRef.Declare
+V.Local.sRet.Declare
+V.Local.sSQL.Declare
+V.Local.fBegCost.Declare
+V.Local.fOutCost.Declare
+V.Local.fInCost.Declare
+V.Local.fTOutCost.Declare
+V.Local.fTInCost.Declare
+V.Local.fEndCost.Declare
+
+Gui.F_StockSummary.GsGridControl1.Visible(False)
+
+F.Intrinsic.UI.InvokeWaitDialog("Loading inventory data","Inventory Movement [APAC]")
+
+F.Intrinsic.Control.If(V.DataTable.dtSummary.Exists,=,True)
+	F.Data.DataView.Close("dtSummary$dtHist","dvDetail")
+	F.Data.DataTable.Close("dtSummary$dtHist")
+	F.Data.DataView.Close("dtSummary","dvSummary")
+	F.Data.DataTable.Close("dtSummary")
+F.Intrinsic.Control.EndIf
+
+V.Local.sPL.Set(V.Screen.F_StockSummary!ddlPL.Text)
+F.Intrinsic.Control.If(V.Global.bLoc,=,False)
+	V.Local.sLoc.Set("")
+F.Intrinsic.Control.Else
+	V.Local.sLoc.Set(V.Screen.F_StockSummary!ddlLoc.Text)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.Local.sPL.Trim,=,"ALL")
+	F.Intrinsic.String.Build("select distinct(i1.part) as Part, i1.Bin, i1.description as Desc1, i2.description_2 as Desc2, i2.description_3 as Desc3, i1.um_inventory as UM, i1.Qty_Onhand, i3.Old_OnHand, i4.New_Onhand as Beg_Onhand, I4.New_Inv_Cost as Beg_Cost, i3.Old_Cost, i1.Qty_Onhand*i1.Amt_Cost as InvCost from inventory_mstr i1 left join inventory_mst2 i2 on i1.part = i2.part and i1.location = i2.location left join (Select A.Part, Old_OnHand, Cost, Old_OnHand*Cost as Old_Cost from Inventory_Hist A Inner Join (Select Part, min(convert(Date_History,SQL_char)+Convert(INV_Hist_Time,SQL_Char)) as Date_Time From Inventory_Hist group by Part) B On A.Part = B.Part And (convert(Date_History,SQL_char)+Convert(INV_Hist_Time,SQL_Char)) = B.Date_Time) i3 on i1.Part = i3.Part left join (Select A.Part, New_OnHand, New_Inv_Cost from Inventory_Hist A Inner Join (Select Part, max(convert((IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))),SQL_char)+Convert(INV_Hist_Time,SQL_Char)) as Date_Time From Inventory_Hist where (IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))) < '{2}' group by Part) B On A.Part = B.Part And (convert((IF (SUBSTRING (A .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (A .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (A .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (A .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (A .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (A .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (A .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (A .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (A .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))),SQL_char)+Convert(INV_Hist_Time,SQL_Char)) = B.Date_Time where A.location = '{1}') i4 On i1.Part = i4.Part where i1.location = '{1}' order by i1.part",V.Local.sPL.Trim,V.Local.sLoc.Trim,V.Global.dBegDate.PervasiveDate,V.Local.sSQL)
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Build("select distinct(i1.part) as Part, i1.Bin, i1.description as Desc1, i2.description_2 as Desc2, i2.description_3 as Desc3, i1.um_inventory as UM, i1.Qty_Onhand, i3.Old_OnHand, i4.New_Onhand as Beg_Onhand, I4.New_Inv_Cost as Beg_Cost, i3.Old_Cost, i1.Qty_Onhand*i1.Amt_Cost as InvCost from inventory_mstr i1 left join inventory_mst2 i2 on i1.part = i2.part and i1.location = i2.location left join (Select A.Part, Old_OnHand, Cost, Old_OnHand*Cost as Old_Cost from Inventory_Hist A Inner Join (Select Part, min(convert(Date_History,SQL_char)+Convert(INV_Hist_Time,SQL_Char)) as Date_Time From Inventory_Hist group by Part) B On A.Part = B.Part And (convert(Date_History,SQL_char)+Convert(INV_Hist_Time,SQL_Char)) = B.Date_Time) i3 on i1.Part = i3.Part left join (Select A.Part, New_OnHand, New_Inv_Cost from Inventory_Hist A Inner Join (Select Part, max(convert((IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))),SQL_char)+Convert(INV_Hist_Time,SQL_Char)) as Date_Time From Inventory_Hist where (IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))) < '{2}' group by Part) B On A.Part = B.Part And (convert((IF (SUBSTRING (A .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (A .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (A .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (A .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (A .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (A .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (A .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (A .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (A .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))),SQL_char)+Convert(INV_Hist_Time,SQL_Char)) = B.Date_Time where A.location = '{1}') i4 On i1.Part = i4.Part where i1.product_line = '{0}' and i1.location = '{1}' order by i1.part",V.Local.sPL.Trim,V.Local.sLoc.Trim,V.Global.dBegDate.PervasiveDate,V.Local.sSQL)
+F.Intrinsic.Control.EndIf
+
+'F.Intrinsic.String.Build("select distinct(i1.part) as Part, i1.description as Desc1, i2.description_2 as Desc2, i2.description_3 as Desc3 from inventory_mstr i1 left join inventory_mst2 i2 on i1.part = i2.part and i1.location = i2.location where i1.product_line = '{0}' and i1.location = '{1}' order by part",V.Local.sPL.Trim,V.Local.sLoc.Trim,V.Local.sSQL)
+'F.Intrinsic.String.Build("select distinct(part) as Part, description as Description from inventory_mstr where product_line = '{0}' and location = '{1}' order by part",V.Local.sPL.Trim,V.Local.sLoc.Trim,V.Local.sSQL)
+F.Data.DataTable.CreateFromSQL("dtSummary","Conx",V.Local.sSQL,True)
+F.Data.DataTable.AddExpressionColumn("dtSummary","Description","String","trim(trim(Desc1)+' '+trim(Desc2)+' '+trim(Desc3))")
+F.Data.DataTable.AddColumn("dtSummary","ExtraDesc","String")
+F.Data.DataTable.AddColumn("dtSummary","BegBal","Float")
+F.Data.DataTable.AddColumn("dtSummary","BegCost","Float")
+F.Data.DataTable.AddColumn("dtSummary","Incoming","Float")
+F.Data.DataTable.AddColumn("dtSummary","InCost","Float")
+F.Data.DataTable.AddColumn("dtSummary","Outgoing","Float")
+F.Data.DataTable.AddColumn("dtSummary","OutCost","Float")
+F.Data.DataTable.AddColumn("dtSummary","EndBal","Float")
+F.Data.DataTable.AddColumn("dtSummary","EndCost","Float")
+
+'F.Data.DataTable.Create("dtDetail",True)
+'F.Data.DataTable.AddColumn("dtDetail","Part","String")
+'F.Data.DataTable.AddColumn("dtDetail","Date","Date")
+'F.Data.DataTable.AddColumn("dtDetail","Time","String")
+'F.Data.DataTable.AddColumn("dtDetail","Code","String")
+'F.Data.DataTable.AddColumn("dtDetail","Reference","String")
+'F.Data.DataTable.AddColumn("dtDetail","Incoming","Float")
+'F.Data.DataTable.AddColumn("dtDetail","Outgoing","Float")
+'F.Data.DataTable.AddColumn("dtDetail","User","String")
+
+'Inventory extra text
+F.Data.Dictionary.CreateFromSQL("dicExtraText","conx","select part, text from inv_extra_text")
+F.Data.Dictionary.SetDefaultReturn("dicExtraText","")
+F.Data.DataTable.FillFromDictionary("dtSummary","dicExtraText","Part","ExtraDesc")
+F.Data.Dictionary.Close("dicExtraText")
+
+'F.Intrinsic.String.Build("select rtrim(i1.part) as Part, i2.description_2 as Desc1, i2.description_3 as Desc2 from inventory_mstr i1 left join inventory_mst2 i2 on i1.part = i2.part and i1.location = i2.location where i1.product_line = '{0}' and i1.location = '{1}' order by part",V.Local.sPL.Trim,V.Local.sLoc.Trim,V.Local.sSQL)
+'F.Data.DataTable.CreateFromSQL("dtDesc","Conx",V.Local.sSQL)
+
+F.Intrinsic.Control.For(V.Local.i1,0,V.DataTable.dtSummary.RowCount--,1)
+	F.Intrinsic.Math.Add(V.Local.i1,1,V.Local.iRow)
+	F.Intrinsic.String.Build("Part: {0} ({1} of {2})",V.DataTable.dtSummary(V.Local.i1).Part!FieldValTrim,V.Local.iRow,V.DataTable.dtSummary.RowCount,V.Local.sMsg)
+	F.Intrinsic.UI.ChangeWaitStatus(V.Local.sMsg,V.Local.iRow,1,V.DataTable.dtSummary.RowCount)
+	
+	'Get inventory beginning balance up to the selected start date
+	V.Local.sPart.Set(V.DataTable.dtSummary(V.Local.i1).Part!FieldValTrim)
+'	F.Intrinsic.String.Build("select sum(quantity) from v_inventory_hist where part = '{0}' and date_history < '{1}' and location = '{2}'",V.Local.sPart.PSQLFriendly,V.Global.dBegDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sSQL)
+'	F.Intrinsic.String.Build("Select New_OnHand from Inventory_Hist A Inner Join (Select Part, max(convert((IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))),SQL_char)+Convert(INV_Hist_Time,SQL_Char)) as Date_Time From Inventory_Hist where part = '{0}' and (IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (INVENTORY_HIST .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))) < '{1}' and location = '{2}' group by Part) B On A.Part = B.Part And (convert((IF (SUBSTRING (A .DATE_ACTION ,5 ,2 )<= '99' AND SUBSTRING (A .DATE_ACTION ,5 ,2 )>= '00' AND SUBSTRING (A .DATE_ACTION ,1 ,2 )<= '12' AND SUBSTRING (A .DATE_ACTION ,1 ,2 )>= '01' AND SUBSTRING (A .DATE_ACTION ,3 ,2 )<= '31' AND SUBSTRING (A .DATE_ACTION ,3 ,2 )>= '01' ,IF (SUBSTRING (A .DATE_ACTION ,5 ,2 )< '80' ,CONVERT ('20' +SUBSTRING (A .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,3 ,2 ),SQL_DATE ),CONVERT ('19' +SUBSTRING (A .DATE_ACTION ,5 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,1 ,2 )+'-' +SUBSTRING (A .DATE_ACTION ,3 ,2 ),SQL_DATE )),CONVERT ('1900-01-01' ,SQL_DATE ))),SQL_char)+Convert(INV_Hist_Time,SQL_Char)) = B.Date_Time",V.Local.sPart.PSQLFriendly,V.Global.dBegDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sSQL)
+'	F.ODBC.Connection!Conx.ExecuteAndReturn(V.Local.sSQL,V.Local.fBegBal)
+'	F.Intrinsic.Math.Add(V.Local.fBegBal,0,V.Local.fBegBal)
+'	F.Intrinsic.Math.Add(V.Local.fBegBal,V.DataTable.dtSummary(V.Local.i1).Old_Onhand!FieldVal,V.Local.fBegBal)
+	V.Local.fBegBal.Set(V.DataTable.dtSummary(V.Local.i1).Beg_Onhand!FieldVal)
+	V.Local.fBegCost.Set(V.DataTable.dtSummary(V.Local.i1).Beg_Cost!FieldVal)
+	F.Intrinsic.Math.Mult(V.Local.fBegCost,V.Local.fBegBal,V.Local.fBegCost)
+	
+'	F.Intrinsic.Debug.ShowCallerInfo
+	
+	'Get inventory history within the selected date range (positive)
+'	F.Intrinsic.String.Build("select part, date_history, inv_hist_time, code_transaction as code, transaction_desc as reference, quantity, job, suffix, seq, userid from v_inventory_hist where part = '{0}' and date_history between '{1}' and '{2}' and location = '{3}' ",V.Local.sPart.PSQLFriendly,V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sSQL)
+	F.Intrinsic.String.Build("select part, date_history, inv_hist_time, code_transaction as code, transaction_desc as reference, quantity, job, suffix, seq, userid, cost from v_inventory_hist where part = '{0}' and date_action between '{1}' and '{2}' and location = '{3}' ",V.Local.sPart.PSQLFriendly,V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sSQL)
+	F.Data.DataTable.CreateFromSQL("dtHist","Conx",V.Local.sSQL)
+	V.Local.fTIn.Set(0)
+	V.Local.fTInCost.Set(0)
+	V.Local.fTOut.Set(0)
+	V.Local.fTOutCost.Set(0)
+	F.Intrinsic.Control.If(V.DataTable.dtHist.RowCount,>,0)
+		F.Intrinsic.Control.For(V.Local.i2,0,V.DataTable.dtHist.RowCount--,1)
+			F.Intrinsic.Control.If(V.DataTable.dtHist(V.Local.i2).quantity!FieldValFloat,<,0)
+				V.Local.fIn.Set(0)
+				V.Local.fInCost.Set(0)
+				F.Intrinsic.Math.Abs(V.DataTable.dtHist(V.Local.i2).quantity!FieldValFloat,V.Local.fOut)
+				F.Intrinsic.Math.Abs(V.DataTable.dtHist(V.Local.i2).Cost!FieldValFloat,V.Local.fOutCost)
+				F.Intrinsic.Math.Mult(V.Local.fOut,V.Local.fOutCost,V.Local.fOutCost)
+			F.Intrinsic.Control.Else
+				V.Local.fIn.Set(V.DataTable.dtHist(V.Local.i2).quantity!FieldValFloat)
+				V.Local.fInCost.Set(V.DataTable.dtHist(V.Local.i2).Cost!FieldValFloat)
+				F.Intrinsic.Math.Mult(V.Local.fIn,V.Local.fInCost,V.Local.fInCost)
+				V.Local.fOut.Set(0)
+				V.Local.fOutCost.Set(0)
+			F.Intrinsic.Control.EndIf
+			F.Intrinsic.Math.Add(V.Local.fTIn,V.Local.fIn,V.Local.fTIn)
+			F.Intrinsic.Math.Add(V.Local.fTOut,V.Local.fOut,V.Local.fTOut)
+			F.Intrinsic.Math.Add(V.Local.fTOutCost,V.Local.fOutCost,V.Local.fTOutCost)
+			F.Intrinsic.Math.Add(V.Local.fTInCost,V.Local.fInCost,V.Local.fTInCost)
+'			F.Intrinsic.Control.If(V.DataTable.dtHist(V.Local.i2).code!FieldValTrim,=,"J52")
+'				F.Intrinsic.String.Build("WO: {0}-{1} {3} SEQ: {2}",V.DataTable.dtHist(V.Local.i2).job!FieldValTrim,V.DataTable.dtHist(V.Local.i2).suffix!FieldValTrim,V.DataTable.dtHist(V.Local.i2).seq!FieldValTrim,V.Ambient.Tab,V.Local.sRef)
+'			F.Intrinsic.Control.ElseIf(V.DataTable.dtHist(V.Local.i2).code!FieldValTrim,=,"J55")
+'				F.Intrinsic.String.Build("WO: {0}-{1} {3} SEQ: {2}",V.DataTable.dtHist(V.Local.i2).job!FieldValTrim,V.DataTable.dtHist(V.Local.i2).suffix!FieldValTrim,V.DataTable.dtHist(V.Local.i2).seq!FieldValTrim,V.Ambient.Tab,V.Local.sRef)
+'			F.Intrinsic.Control.Else
+'				V.Local.sRef.Set(V.DataTable.dtHist(V.Local.i2).reference!FieldValTrim)
+'			F.Intrinsic.Control.EndIf
+'			F.Data.DataTable.AddRow("dtDetail","Part",V.DataTable.dtSummary(V.Local.i1).Part!FieldValTrim,"Date",V.DataTable.dtHist(V.Local.i2).date_history!FieldVal,"Time",V.DataTable.dtHist(V.Local.i2).inv_hist_time!FieldVal,"Code",V.DataTable.dtHist(V.Local.i2).code!FieldValTrim,"Reference",V.Local.sRef.Trim,"Incoming",V.Local.fIn,"Outgoing",V.Local.fOut,"User",V.DataTable.dtHist(V.Local.i2).userid!FieldValTrim)
+		F.Intrinsic.Control.Next(V.Local.i2)
+	F.Intrinsic.Control.Else
+		
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Control.If(V.DataTable.dtSummary(V.Local.i1).Beg_Onhand!FieldValTrim,=,"")
+		V.Local.fBegBal.Set(V.DataTable.dtSummary(V.Local.i1).Old_Onhand!FieldVal)
+		V.Local.fBegCost.Set(V.DataTable.dtSummary(V.Local.i1).Old_Cost!FieldVal)
+		F.Intrinsic.Control.If(V.DataTable.dtSummary(V.Local.i1).Old_Onhand!FieldValTrim,=,"")
+			F.Intrinsic.Math.Add(V.Local.fBegBal,V.DataTable.dtSummary(V.Local.i1).Qty_Onhand!FieldVal,V.Local.fBegBal)
+			V.Local.fBegCost.Set(V.DataTable.dtSummary(V.Local.i1).InvCost!FieldVal)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+	'Combine description with alternate description 1 and 2
+'	F.Intrinsic.String.Build("Part = '{0}'",V.Local.sPart.PSQLFriendly,V.Local.sFilter)
+'	F.Data.DataTable.Select("dtDesc",V.Local.sFilter,V.Local.sRet)
+'	F.Intrinsic.Control.If(V.Local.sRet,<>,"***NORETURN***")
+'		F.Intrinsic.String.Build("{0} {1} {2}",V.DataTable.dtSummary(V.Local.i1).Description!FieldValTrim,V.DataTable.dtDesc(V.Local.sRet).Desc1!FieldValTrim,V.DataTable.dtDesc(V.Local.sRet).Desc2!FieldValTrim,V.Local.sDesc)
+'	F.Intrinsic.Control.Else
+'		V.Local.sDesc.Set(V.DataTable.dtSummary(V.Local.i1).Description!FieldValTrim)
+'	F.Intrinsic.Control.EndIf
+'	F.Intrinsic.String.Build("Select A.Part, Old_OnHand from V_Inventory_Hist A Inner Join (Select Part, min(convert(Date_History,SQL_char)+Convert(INV_Hist_Time,SQL_Char)) as Date_Time From V_Inventory_Hist group by Part) B On A.Part = B.Part And (convert(Date_History,SQL_char)+Convert(INV_Hist_Time,SQL_Char)) = B.Date_Time where A.part = '{0}'",V.Local.sPart.PSQLFriendly,V.Local.sSQL)
+'	F.ODBC.Connection!Conx.OpenLocalRecordsetRO("rst",V.Local.sSQL)
+'	F.Intrinsic.Control.If(V.ODBC.conx!rst.EOF,=,False)
+'	F.Intrinsic.Control.EndIf	
+'	F.ODBC.Conx!rst.Close
+	
+	F.Intrinsic.Math.Add(V.Local.fBegBal,V.Local.fTIn,V.Local.fEndBal)
+	F.Intrinsic.Math.Sub(V.Local.fEndBal,V.Local.fTOut,V.Local.fEndBal)
+	F.Intrinsic.Math.Add(V.Local.fBegCost,V.Local.fTInCost,V.Local.fEndCost)
+	F.Intrinsic.Math.Sub(V.Local.fEndCost,V.Local.fTOutCost,V.Local.fEndCost)
+	F.Data.DataTable.SetValue("dtSummary",V.Local.i1,"BegBal",V.Local.fBegBal,"BegCost",V.Local.fBegCost,"Incoming",V.Local.fTIn,"InCost",V.Local.fTInCost,"Outgoing",V.Local.fTOut,"OutCost",V.Local.fTOutCost,"EndBal",V.Local.fEndBal,"EndCost",V.Local.fEndCost)
+	F.Data.DataTable.Close("dtHist")
+F.Intrinsic.Control.Next(V.Local.i1)
+
+'Stock transaction history
+F.Intrinsic.Control.If(V.Local.sPL.Trim,=,"ALL")
+'	F.Intrinsic.String.Build("select i1.part as Part, i1.date_history as DateHist, i1.inv_hist_time as TimeHist, i1.code_transaction as Code, case i1.code_transaction when 'J52' then 'WO: '+job+'-'+suffix+' SEQ: '+seq when 'J55' then 'WO: '+job+'-'+suffix+' SEQ: '+seq when 'C52' then 'ORDER # '+job+'-'+suffix when 'Z10' then 'WO: '+job+'-'+suffix+' SEQ: '+seq else i1.transaction_desc end as Reference, i2.um_inventory as UM, case when i1.quantity > 0 then i1.quantity else 0 end as Incoming, case when i1.quantity < 0 then -1*i1.quantity else 0 end as Outgoing, i1.userid as UserID from v_inventory_hist i1 left join v_inventory_mstr i2 on i1.part = i2.part and i1.location = i2.location where i1.date_history between '{0}' and '{1}' and i1.location = '{2}' and right(left(i2.part,18),1)<>'*' order by i1.part, i1.date_history desc, i1.inv_hist_time desc",V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sPL.Trim,V.Local.sSQL)
+	F.Intrinsic.String.Build("select i1.part as Part, i1.date_history as DateHist, i1.inv_hist_time as TimeHist, i1.code_transaction as Code, case i1.code_transaction when 'J52' then 'WO: '+job+'-'+suffix+' SEQ: '+seq when 'J55' then 'WO: '+job+'-'+suffix+' SEQ: '+seq when 'C52' then 'ORDER # '+job+'-'+suffix when 'Z10' then 'WO: '+job+'-'+suffix+' SEQ: '+seq else i1.transaction_desc end as Reference, i2.um_inventory as UM, case when i1.quantity > 0 then i1.quantity else 0 end as Incoming, case when i1.quantity < 0 then -1*i1.quantity else 0 end as Outgoing, i1.userid as UserID from v_inventory_hist i1 left join v_inventory_mstr i2 on i1.part = i2.part and i1.location = i2.location where i1.date_history between '{0}' and '{1}' and i1.location = '{2}' and right(left(i2.part,18),1)<>'*' order by i1.part, i1.date_history desc, i1.inv_hist_time desc",V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sPL.Trim,V.Local.sSQL)
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Build("select i1.part as Part, i1.date_history as DateHist, i1.inv_hist_time as TimeHist, i1.code_transaction as Code, case i1.code_transaction when 'J52' then 'WO: '+job+'-'+suffix+' SEQ: '+seq when 'J55' then 'WO: '+job+'-'+suffix+' SEQ: '+seq when 'C52' then 'ORDER # '+job+'-'+suffix when 'Z10' then 'WO: '+job+'-'+suffix+' SEQ: '+seq else i1.transaction_desc end as Reference, i2.um_inventory as UM, case when i1.quantity > 0 then i1.quantity else 0 end as Incoming, case when i1.quantity < 0 then -1*i1.quantity else 0 end as Outgoing, i1.userid as UserID from v_inventory_hist i1 left join v_inventory_mstr i2 on i1.part = i2.part and i1.location = i2.location where i1.date_history between '{0}' and '{1}' and i1.location = '{2}' and right(left(i2.part,18),1)<>'*' and i2.product_line = '{3}' order by i1.part, i1.date_history desc, i1.inv_hist_time desc",V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sLoc.Trim,V.Local.sPL.Trim,V.Local.sSQL)
+F.Intrinsic.Control.EndIf
+F.Data.DataTable.CreateFromSQL("dtSummary$dtHist","conx",V.Local.sSQL,True)
+
+'F.Data.DataTable.Clone("dtDetail","dtSummary$dtHist",True)
+'F.Data.DataTable.Merge("dtDetail","dtSummary$dtHist",False,1)
+F.Data.DataTable.AddRelation("dtSummary","Part","dtSummary$dtHist","Part")
+F.Data.DataView.Create("dtSummary","dvSummary")
+F.Data.DataView.Create("dtSummary$dtHist","dvDetail")
+
+Gui.F_StockSummary.GsGridControl1.AddGridviewFromDataview("gvSummary","dtSummary","dvSummary")
+Gui.F_StockSummary.GsGridControl1.AddGridviewFromDataview("gvDetail","dtSummary","dvDetail")
+Gui.F_StockSummary.GsGridControl1.MainView("gvSummary")
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvSummary","OptionBehaviorEditable",False)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvSummary","AllowSort",True)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvSummary","AllowFilter",True)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvSummary","MultiSelect",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Desc1","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Desc2","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Desc3","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","ExtraDesc","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Qty_Onhand","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Old_Onhand","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Beg_Onhand","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Beg_Cost","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","old_Cost","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","InvCost","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegBal","Caption","Beginning Balance")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndBal","Caption","Ending Balance")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegCost","Caption","Beg. Cost")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndCost","Caption","Ending Cost")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","InCost","Caption","Incoming Cost")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","OutCost","Caption","Outgoing Cost")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegBal","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Incoming","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Outgoing","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndBal","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegCost","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","InCost","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","OutCost","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndCost","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Part","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BIN","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Description","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","ExtraDesc","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","UM","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegBal","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Incoming","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Outgoing","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndBal","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegCost","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","InCost","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","OutCost","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndCost","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Part","MinWidth","150")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","UM","MinWidth","50")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BIN","MinWidth","75")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Description","MinWidth","300")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","ExtraDesc","MinWidth","300")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegBal","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Incoming","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Outgoing","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndBal","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegCost","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","InCost","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","OutCost","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndCost","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Part","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Bin","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Description","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","ExtraDesc","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","UM","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegBal","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Incoming","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","Outgoing","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndBal","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","BegCost","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","InCost","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","OutCost","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvSummary","EndCost","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvDetail","OptionBehaviorEditable",False)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvDetail","AllowSort",True)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvDetail","AllowFilter",True)
+Gui.F_StockSummary.GsGridControl1.SetGridviewProperty("gvDetail","MultiSelect",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Part","Visible",False)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","DateHist","DisplayCustomDatetime","d")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","TimeHist","DisplayCustomDatetime","T")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Incoming","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Outgoing","DisplayCustomNumeric","##,###,##0.0000")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","DateHist","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","TimeHist","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Code","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Reference","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UM","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Incoming","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Outgoing","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UserID","HeaderHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","DateHist","CellHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","TimeHist","CellHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Code","CellHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UserID","CellHAlignment","Center")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","DateHist","MinWidth","100")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","TimeHist","MinWidth","100")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Code","MinWidth","70")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UM","MinWidth","70")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Reference","MinWidth","200")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Incoming","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Outgoing","MinWidth","120")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UserID","MinWidth","100")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","DateHist","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","TimeHist","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Code","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Reference","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UM","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Incoming","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","Outgoing","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","UserID","HeaderFontBold",True)
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","DateHist","Caption","Date")
+Gui.F_StockSummary.GsGridControl1.SetColumnProperty("gvDetail","TimeHist","Caption","Time")
+
+F.Intrinsic.Control.For(V.Local.i1,0,V.DataTable.dtSummary.RowCount--,2)
+	Gui.F_StockSummary.GsGridControl1.SetRowAppearance("gvSummary",V.Local.i1,"backcolor","aliceblue")
+F.Intrinsic.Control.Next(V.Local.i1)
+
+F.Intrinsic.Control.For(V.Local.i1,0,V.DataTable.dtSummary$dtHist.RowCount--,1)
+	Gui.F_StockSummary.GsGridControl1.SetRowAppearance("gvDetail",V.Local.i1,"backcolor",V.Color.LtGray)
+F.Intrinsic.Control.Next(V.Local.i1)
+
+F.Intrinsic.UI.CloseWaitDialog
+
+Gui.F_StockSummary.GsGridControl1.Visible(True)
+Program.Sub.LoadStockData.End
+
+Program.Sub.LoadRawHist.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+
+	V.Local.sSQL.Declare
+	V.Local.dBegDate.Declare
+	V.Local.dEndDate.Declare
+	V.Local.sPart.Declare
+	V.Local.sAccrual.Declare
+	V.Local.sPrevAccrual.Declare
+	V.Local.sOpenInv.Declare
+	V.Local.sPrevOpenInv.Declare
+	V.Local.sInvoice.Declare
+	V.Local.sActiveFilterString.Declare
+	V.Local.fBreak.Declare
+
+	V.Local.sPL.Declare
+	
+	V.Local.sPL.Set(V.Screen.F_StockSummary!ddlPL.Text)
+	
+	Gui.F_StockSummary.GsGridControlRawHist.Visible(False)
+
+	F.Intrinsic.Control.If(V.DataTable.dtRawHIst.Exists)
+		F.Data.DataTable.Close("dtRawHIst")	
+	F.Intrinsic.Control.EndIf
+
+	'Find Inventory History Records
+
+	F.Intrinsic.Control.If(V.Local.sPL.Trim,=,"ALL")
+		F.Intrinsic.String.Build("select A.PART, B.DESCRIPTION, A.DATE_HISTORY, A.INV_HIST_TIME, A.CODE_TRANSACTION, A.TRANSACTION_DESC, B.UM_Inventory as UM, A.QUANTITY from V_INVENTORY_HIST A LEFT JOIN V_INVENTORY_MSTR B ON A.PART = B.PART WHERE A.DATE_HISTORY BETWEEN '{1}' AND '{2}';",V.Local.sPL.Trim,V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sSQL)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("select A.PART, B.DESCRIPTION, A.DATE_HISTORY, A.INV_HIST_TIME, A.CODE_TRANSACTION, A.TRANSACTION_DESC, B.UM_Inventory as UM, A.QUANTITY from V_INVENTORY_HIST A LEFT JOIN V_INVENTORY_MSTR B ON A.PART = B.PART WHERE A.PRODUCT_LINE = '{0}' AND A.DATE_HISTORY BETWEEN '{1}' AND '{2}';",V.Local.sPL.Trim,V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sSQL)
+	F.Intrinsic.Control.EndIf
+
+'	F.Intrinsic.String.Build("select A.PART, B.DESCRIPTION, A.DATE_HISTORY, A.INV_HIST_TIME, A.CODE_TRANSACTION, A.TRANSACTION_DESC, A.QUANTITY from V_INVENTORY_HIST A LEFT JOIN V_INVENTORY_MSTR B ON A.PART = B.PART WHERE A.PRODUCT_LINE = '{0}' AND A.DATE_HISTORY BETWEEN '{1}' AND '{2}';",V.Local.sPL.Trim,V.Global.dBegDate.PervasiveDate,V.Global.dEndDate.PervasiveDate,V.Local.sSQL)
+	F.Data.DataTable.CreateFromSQL("dtRawHIst","conx",V.Local.sSQL,True)
+
+
+	Gui.F_StockSummary.GsGridControlRawHist.AddGridviewFromDatatable("gvRawHist","dtRawHIst")
+	Gui.F_StockSummary.GsGridControlRawHist.SuspendLayout()
+	Gui.F_StockSummary.GsGridControlRawHist.SetGridViewProperty("gvRawHist","MultiSelect",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetGridViewProperty("gvRawHist","AllowSort",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetGridViewProperty("gvRawHist","AllowFilter",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetGridViewProperty("gvRawHist","ShowGroupPanel",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetGridViewProperty("gvRawHist","EnableAppearanceOddRow",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetGridViewProperty("gvRawHist","OptionsViewColumnAutoWidth",False)
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","VisibleIndex","0")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","VisibleIndex","1")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","VisibleIndex","2")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","VisibleIndex","3")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","VisibleIndex","4")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","VisibleIndex","5")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","UM","VisibleIndex","6")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","VisibleIndex","7")
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","Caption","Part")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","Caption","Description")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","Caption","Date")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","Caption","Time")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","Caption","Code")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","Caption","Reference")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","Caption","Quantity")
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","UM","AllowEdit",False)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","AllowEdit",False)
+	
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","UM","ReadOnly",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","ReadOnly",True)	
+	
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","UM","MinWidth","100")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","MinWidth","100")	
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","UM","HeaderFontBold",True)
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","HeaderFontBold",True)	
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","PART","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DESCRIPTION","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","TRANSACTION_DESC","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","UM","HeaderHAlignment","Center")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","HeaderHAlignment","Center")
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","CODE_TRANSACTION","CellHAlignment","Center")
+
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","QUANTITY","DisplayCustomNumeric","#,###,##0.00####")
+	
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","DATE_HISTORY","DisplayCustomDatetime","d")
+	Gui.F_StockSummary.GsGridControlRawHist.SetColumnProperty("gvRawHist","INV_HIST_TIME","DisplayCustomDatetime","T")
+	
+
+	Gui.F_StockSummary.GsGridControlRawHist.ResumeLayout()
+	Gui.F_StockSummary.GsGridControlRawHist.MainView("gvRawHist")
+
+	Gui.F_StockSummary.GsGridControlRawHist.Visible(True)
+
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Ambient.ScriptPath,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadRawHist.End
+
+Program.Sub.Unload.Start
+F.Intrinsic.Control.If(V.DataTable.dtSummary.Exists,=,True)
+	F.Data.DataView.Close("dtSummary$dtHist","dvDetail")
+	F.Data.DataTable.Close("dtSummary$dtHist")
+	F.Data.DataView.Close("dtSummary","dvSummary")
+	F.Data.DataTable.Close("dtSummary")
+F.Intrinsic.Control.EndIf
+F.ODBC.Connection!Conx.Close
+F.Intrinsic.Control.End
+
+Program.Sub.Unload.End
+
+Program.Sub.Export.Start
+V.Local.sFileExport.Declare
+V.Local.bExcel.Declare
+V.Local.bFileLocked.Declare
+V.Local.sMsg.Declare
+
+F.Automation.MSExcel.CheckPresence(V.Local.bExcel)
+F.Intrinsic.String.Format(V.Ambient.Date,"YYYYMMDD",V.Local.sMsg)
+F.Intrinsic.Control.SelectCase(V.Screen.F_StockSummary!tab1.Tab)
+	F.Intrinsic.Control.Case(0)
+		F.Intrinsic.Control.If(V.Local.bExcel,=,True)
+			F.Intrinsic.UI.ShowSaveFileDialog("","*.xlsx|",V.Local.sFileExport)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.UI.ShowSaveFileDialog("","*.csv|",V.Local.sFileExport)
+		F.Intrinsic.Control.EndIf
+
+		F.Intrinsic.Control.If(V.Local.sFileExport,<>,"***CANCEL***")
+			F.Intrinsic.Control.If(V.Local.bExcel,=,True)
+				F.Intrinsic.String.Concat(V.Local.sFileExport,".xlsx",V.Local.sFileExport)
+				Gui.F_StockSummary.GsGridControl1.Export(V.Local.sFileExport,"xlsx")
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Concat(V.Local.sFileExport,".csv",V.Local.sFileExport)
+				Gui.F_StockSummary.GsGridControl1.Export(V.Local.sFileExport,"csv")
+			F.Intrinsic.Control.EndIf
+			F.Intrinsic.String.Concat("Grid has been exported to ",V.Local.sFileExport,V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+			F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.Case(1)
+		F.Intrinsic.Control.If(V.Local.bExcel,=,True)
+			F.Intrinsic.UI.ShowSaveFileDialog("","*.xlsx|",V.Local.sFileExport)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.UI.ShowSaveFileDialog("","*.csv|",V.Local.sFileExport)
+		F.Intrinsic.Control.EndIf
+
+		F.Intrinsic.Control.If(V.Local.sFileExport,<>,"***CANCEL***")
+			F.Intrinsic.Control.If(V.Local.bExcel,=,True)
+				F.Intrinsic.String.Concat(V.Local.sFileExport,".xlsx",V.Local.sFileExport)
+				Gui.F_StockSummary.GsGridControlRawHist.Export(V.Local.sFileExport,"xlsx")
+			F.Intrinsic.Control.Else
+				F.Intrinsic.String.Concat(V.Local.sFileExport,".csv",V.Local.sFileExport)
+				Gui.F_StockSummary.GsGridControlRawHist.Export(V.Local.sFileExport,"csv")
+			F.Intrinsic.Control.EndIf
+			F.Intrinsic.String.Concat("Grid has been exported to ",V.Local.sFileExport,V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg)
+			F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+		F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndSelect			
+Program.Sub.Export.End
+
+Program.Sub.HidePart.Start
+V.Local.iCheck.Declare
+V.Local.sFilter.Declare
+
+V.Local.iCheck.Set(V.Screen.F_StockSummary!chkHide.Value)
+F.Intrinsic.Control.If(V.Local.iCheck,=,1)
+	F.Data.DataView.SetFilter("dtSummary","dvSummary","(Incoming+Outgoing) > 0.0")
+F.Intrinsic.Control.Else
+	F.Data.DataView.SetFilter("dtSummary","dvSummary","")
+F.Intrinsic.Control.EndIf
+Program.Sub.HidePart.End
+
+Program.Sub.ResizeScreen.Start
+V.Local.fdX.Declare
+V.Local.fdY.Declare
+V.Local.fH.Declare
+V.Local.fNewHeight.Declare
+V.Local.fNewWidth.Declare
+V.Local.fNewX.Declare
+V.Local.fNewY.Declare
+V.Local.fW.Declare
+'Limit minimum screen size
+F.Intrinsic.Control.If(V.Screen.F_StockSummary.Width,<,V.Global.fMinWidth)
+F.Intrinsic.Control.Andif(V.Screen.F_StockSummary.Height,<,V.Global.fMinHeight)
+	Gui.F_StockSummary..Size(V.Global.fMinWidth,V.Global.fMinHeight)
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.If(V.Screen.F_StockSummary.Width,<,V.Global.fMinWidth)
+		Gui.F_StockSummary..Size(V.Global.fMinWidth,V.Screen.F_StockSummary.Height)
+	F.Intrinsic.Control.ElseIf(V.Screen.F_StockSummary.Height,<,V.Global.fMinHeight)
+		Gui.F_StockSummary..Size(V.Screen.F_StockSummary.Width,V.Global.fMinHeight)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+'Get the ratio of screen size change
+F.Intrinsic.Math.Div(V.Screen.F_StockSummary.Width,V.Global.fRefWidth,V.Local.fdX)
+F.Intrinsic.Math.div(V.Screen.F_StockSummary.Height,V.Global.fRefHeight,V.Local.fdY)
+'Get GsGC new width and height (reference)
+F.Intrinsic.Math.Sub(V.Screen.F_StockSummary.Height,V.Screen.F_StockSummary!GsGridControl1.Top,500,V.Local.fNewHeight)
+F.Intrinsic.Math.Mult(V.Screen.F_StockSummary!GsGridControl1.Width,V.Local.fdX,V.Local.fNewWidth)
+GUi.F_StockSummary.GsGridControl1.Size(V.Local.fNewWidth,V.Local.fNewHeight)
+F.Intrinsic.Math.Mult(V.Screen.F_StockSummary!picGSSLogo.Left,V.Local.fdX,V.Local.fNewX)
+Gui.F_StockSummary.picGSSLogo.Position(V.Local.fNewX,V.Screen.F_StockSummary!picGSSLogo.Top)
+F.Intrinsic.Math.Sub(V.Screen.F_StockSummary.Width,V.Screen.F_StockSummary!GsGridControl1.Left,V.Screen.F_StockSummary!GsGridControl1.Width,V.Local.fW)
+F.Intrinsic.Math.Sub(V.Screen.F_StockSummary.Width,V.Local.fW,V.Screen.F_StockSummary!cmdRefresh.Width,V.Local.fNewX)
+Gui.F_StockSummary.cmdRefresh.Position(V.Local.fNewX,V.Screen.F_StockSummary!cmdRefresh.Top)
+F.Intrinsic.Math.Sub(V.Screen.F_StockSummary.Width,V.Local.fW,V.Screen.F_StockSummary!cmdExport.Width,V.Screen.F_StockSummary!cmdRefresh.Width,200,V.Local.fNewX)
+Gui.F_StockSummary.cmdExport.Position(V.Local.fNewX,V.Screen.F_StockSummary!cmdExport.Top)
+F.Intrinsic.Math.Sub(V.Screen.F_StockSummary.Width,V.Screen.F_StockSummary!picGSSLogo.Width,V.Local.fNewX)
+F.Intrinsic.Math.Div(V.Local.fNewX,2,V.Local.fNewX)
+Gui.F_StockSummary.picGSSLogo.Position(V.Local.fNewX,V.Screen.F_StockSummary!picGSSLogo.Top)
+V.Global.fRefHeight.Set(V.Screen.F_StockSummary.Height)
+V.Global.fRefWidth.Set(V.Screen.F_StockSummary.Width)
+Program.Sub.ResizeScreen.End
+
+Program.Sub.Comments.Start
+${$0$}$Inventory Movement Dashboard$}$MHERTANTO$}$10/7/2019 11:12:08 AM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$This program is to be used to review inventory position on a selected date range. The dashboard shows the beginning balance, incoming quantity, outgoing quantity, and ending balance. In addition, the dashboard displays the transaction history during the selected date range.
+${$5$}$2.0.0.0$}$2
+${$6$}$dyunus$}$20201224092833518$}$xZ6SHi8g7O0Qsxe6AiO2NH3PnOKQRy0TLTFWV/DtXbdWT6/nc8wGOYBlwdsW4A0OqFsBqiMpN5o=
+Program.Sub.Comments.End
